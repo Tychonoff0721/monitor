@@ -1,0 +1,37 @@
+✅【二】数据库表结构（DDL）
+
+以下是你的系统必须的两张核心表：instance 表 和 endpoint_template 表。
+
+1. 实例表（所有组件实例）
+CREATE TABLE mc_instance (
+    instance_id   VARCHAR(64) PRIMARY KEY,
+    service       VARCHAR(64) NOT NULL,
+    component     VARCHAR(64) NOT NULL,
+    host          VARCHAR(128) NOT NULL,
+    role          VARCHAR(32) NOT NULL,
+    update_time   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+示例数据：
+INSERT INTO mc_instance VALUES
+('prod1-rm1',    'bdp_prod', 'yarn-rm',     'rm1.prod.com',    'ACTIVE'),
+('prod1-rm2',    'bdp_prod', 'yarn-rm',     'rm2.prod.com',    'STANDBY'),
+('prod1-hs1',    'bdp_prod', 'spark-hs',    'hs1.prod.com',    'PRIMARY'),
+('prod1-rt1',    'bdp_prod', 'hdfs-router', 'rt1.prod.com',    'PRIMARY');
+
+2. Endpoint 模板表（端口 + 协议 + 前缀）
+CREATE TABLE mc_endpoint_template (
+    endpoint_key  VARCHAR(64) PRIMARY KEY,
+    component     VARCHAR(64) NOT NULL,
+    protocol      VARCHAR(16) NOT NULL,
+    port          INT NOT NULL,
+    prefix        VARCHAR(128) NOT NULL,
+    update_time   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+示例数据：
+INSERT INTO mc_endpoint_template VALUES
+('yarn.rm',      'yarn-rm',     'http', 8088,  '/ws/v1/cluster/apps'),
+('spark.hs',     'spark-hs',    'http', 18080, '/api/v1'),
+('hdfs.router',  'hdfs-router', 'http', 9870,  '/webhdfs/v1'),
+('hdfs.nn.jmx',  'hdfs-nn',     'http', 9870,  '/jmx');

@@ -1,0 +1,118 @@
+1. 系统目标
+
+实现一个可扩展的监控 DSL 引擎，使用户能够用类 SQL 风格的语言描述监控链路，如：
+
+yarn → spark → hdfs
+
+
+系统必须：
+
+支持多实例、多组件、多服务（SERVICE、COMPONENT、INSTANCE）
+
+支持通过 endpoint template + instance 表动态拼 URL
+
+支持用户写 DSL 自动执行监控流程
+
+支持扩展自定义 DSL 函数
+
+2. 核心概念
+2.1 instance 表
+
+记录所有组件实例：
+
+instance_id | service | component | host | role
+
+
+例：
+
+prod1-rm1 | bdp_prod | yarn-rm | rm1.com | ACTIVE
+
+2.2 endpoint_template 表
+
+定义接口模板：
+
+endpoint_key | component | protocol | port | prefix
+
+
+例：
+
+yarn.rm | yarn-rm | http | 8088 | /ws/v1/cluster
+
+2.3 resolve(endpoint_key)
+
+核心方法：
+
+endpoint_template + instance(selected by target) → URL
+
+
+例：
+
+resolve("yarn.rm") →
+    instance = ACTIVE rm
+    template = http + 8088 + /ws/v1/cluster
+==> http://rm1.com:8088/ws/v1/cluster
+
+3. DSL 执行行为模式
+DSL string
+    → DSL Parser → MetricStmt
+        → ExecutionEnv (target + metadata repo)
+            → ExprEvaluator
+                → FunctionCallExpr pipeline
+                    → resolve endpoint_key
+                    → http request
+                    → return Value
+
+4. 责任划分（Responsibility Map）
+模块	职责
+DSL Parser	把 DSL 解析为 AST
+MetricStmt	存储目标(service / component / instance) 与表达式
+ExecutionEnv	根据 endpoint_key 解析 URL
+MetadataRepo	查询 instance/endpoint 模板
+DSL Function	实现具体监控逻辑
+ExprEvaluator	执行整条 pipeline
+5. 类详细说明
+5.1 ExecutionEnv
+class ExecutionEnv {
+    Target target;
+    MetadataRepo repo;
+
+    ResolvedEndpoint resolve(String endpointKey){
+        EndpointTemplate tpl = repo.findEndpointTemplate(endpointKey);
+        Instance inst = repo.findOneInstance(target.service, tpl.component, "ACTIVE");
+        String baseUrl = tpl.protocol + "://" + inst.host + ":" + tpl.port + tpl.prefix;
+        return new ResolvedEndpoint(endpointKey, baseUrl, inst, tpl);
+    }
+}
+
+5.2 YarnRunningAppsFunction
+Value apply(List<Value> args, EvalContext ctx) {
+    ResolvedEndpoint ep = ctx.env.resolve("yarn.rm");
+    String url = ep.baseUrl + "/apps?state=RUNNING";
+    String json = Http.get(url);
+    return JsonParser.parseApps(json);
+}
+
+6. DSL 链路示例（完整流程）
+METRIC spark_etl_total_size
+ON SERVICE 'bdp_prod'
+AS
+    yarn_running_apps(queue="etl")
+    -> spark_app_details()
+    -> extract_table_spaces()
+    -> hdfs_table_stats()
+    -> sum_field("spaceBytes");
+
+
+执行链：
+
+解析 DSL
+
+resolve("yarn.rm") → 找 ACTIVE RM → GET apps
+
+resolve("spark.hs") → GET spark metrics
+
+本地逻辑 extract tables
+
+resolve("hdfs.router") → GET content summary
+
+sum_field 聚合

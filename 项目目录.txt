@@ -1,0 +1,48 @@
+monitor-dsl-engine/
+├── pom.xml
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── com/example/dsl/
+│   │   │       ├── parser/
+│   │   │       │   ├── DslLexer.java
+│   │   │       │   ├── DslParser.java
+│   │   │       │   └── AstBuilder.java
+│   │   │       │
+│   │   │       ├── ast/
+│   │   │       │   ├── MetricStmt.java
+│   │   │       │   ├── Target.java
+│   │   │       │   ├── TargetScope.java
+│   │   │       │   ├── Expr.java
+│   │   │       │   └── FunctionCallExpr.java
+│   │   │       │
+│   │   │       ├── exec/
+│   │   │       │   ├── ExecutionEnv.java
+│   │   │       │   ├── ResolvedEndpoint.java
+│   │   │       │   ├── EvalContext.java
+│   │   │       │   ├── FunctionRegistry.java
+│   │   │       │   └── ExprEvaluator.java
+│   │   │       │
+│   │   │       ├── metadata/
+│   │   │       │   ├── MetadataRepo.java
+│   │   │       │   ├── Instance.java
+│   │   │       │   └── EndpointTemplate.java
+│   │   │       │
+│   │   │       ├── functions/
+│   │   │       │   ├── DslFunction.java
+│   │   │       │   ├── YarnRunningAppsFunction.java
+│   │   │       │   ├── SparkAppDetailsFunction.java
+│   │   │       │   ├── ExtractTableSpacesFunction.java
+│   │   │       │   ├── HdfsTableStatsFunction.java
+│   │   │       │   └── SumFieldFunction.java
+│   │   │       │
+│   │   │       └── utils/
+│   │   │           ├── HttpClient.java
+│   │   │           └── JsonUtils.java
+│   │   │
+│   │   └── resources/
+│   │       └── dsl.g4  <-- 你的语法文件
+│   │
+│   └── test/java/
+│       └── com/example/dsl/
+│           └── DslEngineTest.java
