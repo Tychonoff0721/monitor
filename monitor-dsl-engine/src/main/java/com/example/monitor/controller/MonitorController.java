@@ -68,4 +68,32 @@ public class MonitorController {
     public List<Map<String, Object>> getTopTables() {
         return jdbcTemplate.queryForList("SELECT table_name, SUM(space_bytes) as total_space FROM table_metrics GROUP BY table_name ORDER BY total_space DESC LIMIT 10");
     }
+
+    @Autowired
+    private com.example.monitor.service.MetricScheduler scheduler;
+
+    @GetMapping("/configs")
+    public List<com.example.monitor.model.MetricConfig> getConfigs() {
+        return scheduler.getAllConfigs();
+    }
+    
+    @org.springframework.web.bind.annotation.PostMapping("/configs")
+    public void addConfig(@org.springframework.web.bind.annotation.RequestBody com.example.monitor.model.MetricConfig config) {
+        scheduler.addConfig(config);
+    }
+    
+    @org.springframework.web.bind.annotation.DeleteMapping("/configs/{id}")
+    public void deleteConfig(@org.springframework.web.bind.annotation.PathVariable String id) {
+        scheduler.deleteConfig(id);
+    }
+    
+    @GetMapping("/configs/{id}/result")
+    public Object getConfigResult(@org.springframework.web.bind.annotation.PathVariable String id) {
+        return scheduler.getResult(id);
+    }
+    
+    @GetMapping("/configs/{id}/history")
+    public List<Map<String, Object>> getConfigHistory(@org.springframework.web.bind.annotation.PathVariable String id) {
+        return jdbcTemplate.queryForList("SELECT timestamp, result_json FROM metric_history WHERE config_id = ? ORDER BY timestamp DESC LIMIT 50", id);
+    }
 }

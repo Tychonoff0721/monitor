@@ -81,9 +81,58 @@ public class MockDataGenerator {
                 "skew_score DOUBLE, " +
                 "updated_at TIMESTAMP, " +
                 "PRIMARY KEY(stage_id, app_id))");
+        
+        // New Metadata Tables
+        jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS endpoint_templates (" +
+                "endpoint_key VARCHAR(64) PRIMARY KEY, " +
+                "component VARCHAR(64), " +
+                "protocol VARCHAR(16), " +
+                "port INT, " +
+                "prefix VARCHAR(128))");
+                
+        jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS instances (" +
+                "instance_id VARCHAR(64) PRIMARY KEY, " +
+                "cluster_name VARCHAR(64), " +
+                "service_name VARCHAR(64), " +
+                "component VARCHAR(64), " +
+                "host VARCHAR(128), " +
+                "port INT, " +
+                "role VARCHAR(32))");
+
+        jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS metric_configs (" +
+                "id VARCHAR(64) PRIMARY KEY, " +
+                "description VARCHAR(255), " +
+                "dsl VARCHAR(1024), " +
+                "frequency_ms BIGINT, " +
+                "analysis_type VARCHAR(32), " +
+                "last_run_time BIGINT)");
+
+        jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS metric_history (" +
+                "id BIGINT AUTO_INCREMENT PRIMARY KEY, " +
+                "config_id VARCHAR(64), " +
+                "timestamp BIGINT, " +
+                "result_json TEXT)");
     }
 
     private void generateMockData() {
+        // Clear old history on init if needed, or just keep appending
+        // jdbcTemplate.execute("DELETE FROM metric_history");
+        // Insert Default Metadata
+        jdbcTemplate.execute("DELETE FROM endpoint_templates");
+        jdbcTemplate.update("INSERT INTO endpoint_templates VALUES ('hdfs.nn', 'NameNode', 'http', 9870, '/jmx')");
+        jdbcTemplate.update("INSERT INTO endpoint_templates VALUES ('hdfs.router', 'Router', 'http', 50071, '/jmx')");
+        jdbcTemplate.update("INSERT INTO endpoint_templates VALUES ('yarn.rm', 'ResourceManager', 'http', 8088, '/jmx')");
+        
+        jdbcTemplate.execute("DELETE FROM instances");
+        jdbcTemplate.update("INSERT INTO instances VALUES ('nn1', 'mrs1', 'nameservice1', 'NameNode', 'localhost', 9870, 'ACTIVE')");
+        jdbcTemplate.update("INSERT INTO instances VALUES ('nn2', 'mrs1', 'nameservice1', 'NameNode', 'localhost', 9871, 'STANDBY')");
+        jdbcTemplate.update("INSERT INTO instances VALUES ('r1', 'mrs1', 'router-service', 'Router', 'localhost', 50071, 'ACTIVE')");
+        jdbcTemplate.update("INSERT INTO instances VALUES ('rm1', 'mrs1', 'yarn-service', 'ResourceManager', 'localhost', 8088, 'ACTIVE')");
+        
+        jdbcTemplate.execute("DELETE FROM metric_configs");
+        jdbcTemplate.update("INSERT INTO metric_configs VALUES ('1', 'Check NameNode RPC', 'METRIC rpc_queue ON CLUSTER \"mrs1\" AS jmx_func(\"hdfs.nn\")', 30000, 'map', 0)");
+        jdbcTemplate.update("INSERT INTO metric_configs VALUES ('2', 'Check Router RPC', 'METRIC router_rpc ON CLUSTER \"mrs1\" AS jmx_func(\"hdfs.router\")', 30000, 'map', 0)");
+
         Random random = new Random();
         List<Object[]> jobArgs = new ArrayList<>();
         List<Object[]> tableArgs = new ArrayList<>();

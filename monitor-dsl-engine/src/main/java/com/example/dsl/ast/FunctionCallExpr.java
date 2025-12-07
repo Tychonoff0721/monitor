@@ -1,11 +1,9 @@
 package com.example.dsl.ast;
 
-import lombok.Data;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@Data
 public class FunctionCallExpr implements Expr {
     private String functionName;
     private List<Object> args = new ArrayList<>();
@@ -15,4 +13,16 @@ public class FunctionCallExpr implements Expr {
     public FunctionCallExpr(String functionName) {
         this.functionName = functionName;
     }
+
+    public String getFunctionName() { return functionName; }
+    public void setFunctionName(String functionName) { this.functionName = functionName; }
+
+    public List<Object> getArgs() { return args; }
+    public void setArgs(List<Object> args) { this.args = args; }
+
+    public Map<String, Object> getNamedArgs() { return namedArgs; }
+    public void setNamedArgs(Map<String, Object> namedArgs) { this.namedArgs = namedArgs; }
+
+    public FunctionCallExpr getNext() { return next; }
+    public void setNext(FunctionCallExpr next) { this.next = next; }
 }

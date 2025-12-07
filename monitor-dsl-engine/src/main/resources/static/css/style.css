@@ -1,0 +1,27 @@
+body {
+    margin: 0;
+    padding: 0;
+    background: #f0f2f5;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.site-layout-content {
+    padding: 24px;
+    background: #fff;
+    min-height: 280px;
+    margin: 24px;
+    border-radius: 8px;
+}
+
+.logo {
+    float: left;
+    width: 120px;
+    height: 31px;
+    margin: 16px 24px 16px 0;
+    background: rgba(255, 255, 255, 0.3);
+    color: white;
+    text-align: center;
+    line-height: 31px;
+    font-weight: bold;
+    font-size: 18px;
+}

@@ -28,9 +28,9 @@ public class DslEngineTest {
         repo.addTemplate(new EndpointTemplate("yarn.rm", "yarn-rm", "http", 8088, "/ws/v1/cluster"));
         repo.addTemplate(new EndpointTemplate("spark.hs", "spark-hs", "http", 18080, "/api/v1"));
         repo.addTemplate(new EndpointTemplate("hdfs.router", "hdfs-router", "http", 9870, "/webhdfs/v1"));
-        repo.addInstance(new Instance("prod1-rm1", "bdp_prod", "yarn-rm", "rm1.prod.com", "ACTIVE"));
-        repo.addInstance(new Instance("prod1-hs1", "bdp_prod", "spark-hs", "hs1.prod.com", "PRIMARY"));
-        repo.addInstance(new Instance("prod1-rt1", "bdp_prod", "hdfs-router", "rt1.prod.com", "PRIMARY"));
+        repo.addInstance(new Instance("prod1-rm1", "cluster1", "bdp_prod", "yarn-rm", "rm1.prod.com", 8088, "ACTIVE"));
+        repo.addInstance(new Instance("prod1-hs1", "cluster1", "bdp_prod", "spark-hs", "hs1.prod.com", 18080, "PRIMARY"));
+        repo.addInstance(new Instance("prod1-rt1", "cluster1", "bdp_prod", "hdfs-router", "rt1.prod.com", 9870, "PRIMARY"));
 
         // 2. Register Functions
         FunctionRegistry registry = new FunctionRegistry();

@@ -1,7 +1,9 @@
 package com.example.dsl.functions;
 
 import com.example.dsl.exec.EvalContext;
-import com.example.dsl.exec.ResolvedEndpoint;
+import com.example.dsl.utils.HttpClient;
+import com.example.dsl.utils.JsonUtils;
+
 import java.util.List;
 import java.util.Map;
 
@@ -11,25 +13,32 @@ public class HdfsTableStatsFunction implements DslFunction {
     public Object apply(List<Object> args, Map<String, Object> namedArgs, EvalContext ctx) {
         List<Map<String, Object>> tables = (List<Map<String, Object>>) args.get(0);
         
-        ResolvedEndpoint routerEp = ctx.getEnv().resolve("hdfs.router");
+        // In real life, we would resolve HMS endpoint from ctx.getEnv().resolve("hive.metastore")
+        // But here we use the Mock Service we just built.
         
         for (Map<String, Object> table : tables) {
             String tableName = (String) table.get("tableName");
-            // Resolve path from table name (mock logic)
-            // e.g. db.table -> /user/hive/warehouse/db.db/table
-            String path = "/user/hive/warehouse/" + tableName.replace(".", ".db/");
+            if (tableName == null) continue;
+
+            String[] parts = tableName.split("\\.");
+            String db = parts.length > 1 ? parts[0] : "default";
+            String tbl = parts.length > 1 ? parts[1] : parts[0];
             
-            // Call HDFS Router/NameNode to get content summary
-            // API: /webhdfs/v1/{path}?op=GETCONTENTSUMMARY
+            // Call Mock HMS Service
+            // API: /mock/hms/table/{db}/{table}
             try {
-                 // Mock call
-                 long spaceBytes = 1024L * 1024L * 100L; // 100MB
-                 long fileCount = 10;
+                 String url = "http://localhost:8080/mock/hms/table/" + db + "/" + tbl;
+                 String json = HttpClient.get(url);
+                 Map<String, Object> stats = JsonUtils.parse(json, Map.class);
                  
-                 table.put("spaceBytes", spaceBytes);
-                 table.put("fileCount", fileCount);
+                 if (stats != null) {
+                     table.put("spaceBytes", stats.get("totalSize"));
+                     table.put("fileCount", stats.get("numFiles"));
+                     table.put("format", stats.get("format"));
+                 }
             } catch (Exception e) {
-                table.put("error", e.getMessage());
+                System.err.println("Failed to fetch stats for " + tableName + ": " + e.getMessage());
+                table.put("error", "HMS Fetch Failed");
             }
         }
         
